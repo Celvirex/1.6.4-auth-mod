@@ -13,12 +13,12 @@
   "icon": "assets/authmod/icon.png",
   "environment": "server",
   "entrypoints": {
-    "main": ["com.example.authmod.AuthMod"],
-    "server": ["com.example.authmod.AuthMod"]
+    "main": ["com.example.authmod"],
+    "server": ["com.example.authmod"]
   },
   "mixins": ["authmod.mixins.json"],
   "depends": {
-    "fabricloader": ">=0.4.0",
+    "fabricloader": ">=0.15.11",
     "fabric": "*",
     "minecraft": "1.6.4"
   }
