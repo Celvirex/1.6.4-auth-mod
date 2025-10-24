@@ -1,0 +1,27 @@
+{
+  "database": {
+    "host": "localhost",
+    "port": 3306,
+    "database": "minecraft_auth",
+    "username": "minecraft",
+    "password": "secure_password",
+    "connectionPoolSize": 5,
+    "maxLifetime": 1800000
+  },
+  "security": {
+    "minPasswordLength": 6,
+    "maxLoginAttempts": 3,
+    "sessionTimeoutMinutes": 30,
+    "requireRegistration": true,
+    "preventMovement": true,
+    "preventChat": true,
+    "preventInteraction": true
+  },
+  "messages": {
+    "notAuthenticated": "§cPlease authenticate using /login or /register",
+    "registerSuccess": "§aRegistration successful! You are now logged in.",
+    "loginSuccess": "§aLogin successful!",
+    "invalidPassword": "§cInvalid password!",
+    "alreadyRegistered": "§cYou are already registered!"
+  }
+}
