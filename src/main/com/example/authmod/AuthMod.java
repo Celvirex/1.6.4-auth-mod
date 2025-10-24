@@ -8,6 +8,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.example.authmod.config.ModConfig;
 
 import java.sql.*;
 import java.util.HashMap;
@@ -19,16 +20,21 @@ import static net.minecraft.server.command.CommandManager.*;
 public class AuthMod implements ModInitializer {
     
     private static DatabaseManager databaseManager;
+    private static ModConfig config;
     private static final Map<UUID, Boolean> authenticatedPlayers = new HashMap<>();
     
     @Override
     public void onInitialize() {
         System.out.println("AuthMod initializing...");
         
+        // Load configuration
+        config = ModConfig.load();
+        System.out.println("AuthMod configuration loaded");
+        
         // Initialize database connection when server starts
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             try {
-                databaseManager = new DatabaseManager();
+                databaseManager = new DatabaseManager(config);
                 databaseManager.initializeDatabase();
                 System.out.println("AuthMod database initialized successfully");
             } catch (Exception e) {
@@ -110,6 +116,21 @@ public class AuthMod implements ModInitializer {
                 )
             )
         );
+        
+        // Logout command
+        dispatcher.register(literal("logout")
+            .executes(context -> {
+                ServerCommandSource source = context.getSource();
+                ServerPlayerEntity player = source.getPlayer();
+                
+                if (player == null) {
+                    source.sendError(Text.literal("This command can only be used by players"));
+                    return 0;
+                }
+                
+                return logoutPlayer(player);
+            })
+        );
     }
     
     private int registerPlayer(ServerPlayerEntity player, String password, String confirmPassword) {
@@ -117,25 +138,25 @@ public class AuthMod implements ModInitializer {
         String playerName = player.getGameProfile().getName();
         
         if (!password.equals(confirmPassword)) {
-            player.sendMessage(Text.literal("§cPasswords do not match!"), false);
+            player.sendMessage(Text.literal(config.messages.passwordsDontMatch), false);
             return 0;
         }
         
-        if (password.length() < 6) {
-            player.sendMessage(Text.literal("§cPassword must be at least 6 characters long!"), false);
+        if (password.length() < config.security.minPasswordLength) {
+            player.sendMessage(Text.literal(String.format(config.messages.passwordTooShort, config.security.minPasswordLength)), false);
             return 0;
         }
         
         try {
             if (databaseManager.isPlayerRegistered(playerId)) {
-                player.sendMessage(Text.literal("§cYou are already registered! Use /login <password>"), false);
+                player.sendMessage(Text.literal(config.messages.alreadyRegistered), false);
                 return 0;
             }
             
             boolean success = databaseManager.registerPlayer(playerId, playerName, password);
             if (success) {
                 authenticatedPlayers.put(playerId, true);
-                player.sendMessage(Text.literal("§aSuccessfully registered and logged in!"), false);
+                player.sendMessage(Text.literal(config.messages.registerSuccess), false);
                 return 1;
             } else {
                 player.sendMessage(Text.literal("§cRegistration failed. Please try again."), false);
@@ -160,10 +181,10 @@ public class AuthMod implements ModInitializer {
             boolean success = databaseManager.authenticatePlayer(playerId, password);
             if (success) {
                 authenticatedPlayers.put(playerId, true);
-                player.sendMessage(Text.literal("§aSuccessfully logged in!"), false);
+                player.sendMessage(Text.literal(config.messages.loginSuccess), false);
                 return 1;
             } else {
-                player.sendMessage(Text.literal("§cInvalid password!"), false);
+                player.sendMessage(Text.literal(config.messages.invalidPassword), false);
                 return 0;
             }
         } catch (SQLException e) {
@@ -181,18 +202,18 @@ public class AuthMod implements ModInitializer {
             return 0;
         }
         
-        if (newPassword.length() < 6) {
-            player.sendMessage(Text.literal("§cNew password must be at least 6 characters long!"), false);
+        if (newPassword.length() < config.security.minPasswordLength) {
+            player.sendMessage(Text.literal(String.format(config.messages.passwordTooShort, config.security.minPasswordLength)), false);
             return 0;
         }
         
         try {
             boolean success = databaseManager.changePassword(playerId, oldPassword, newPassword);
             if (success) {
-                player.sendMessage(Text.literal("§aPassword changed successfully!"), false);
+                player.sendMessage(Text.literal(config.messages.changePasswordSuccess), false);
                 return 1;
             } else {
-                player.sendMessage(Text.literal("§cOld password is incorrect!"), false);
+                player.sendMessage(Text.literal(config.messages.changePasswordFail), false);
                 return 0;
             }
         } catch (SQLException e) {
@@ -202,11 +223,22 @@ public class AuthMod implements ModInitializer {
         }
     }
     
+    private int logoutPlayer(ServerPlayerEntity player) {
+        UUID playerId = player.getUuid();
+        authenticatedPlayers.remove(playerId);
+        player.sendMessage(Text.literal("§aYou have been logged out!"), false);
+        return 1;
+    }
+    
     public static boolean isPlayerAuthenticated(UUID playerId) {
         return authenticatedPlayers.getOrDefault(playerId, false);
     }
     
     public static void playerLoggedOut(UUID playerId) {
         authenticatedPlayers.remove(playerId);
+    }
+    
+    public static ModConfig getConfig() {
+        return config;
     }
 }
