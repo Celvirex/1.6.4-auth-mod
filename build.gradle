@@ -17,6 +17,7 @@ repositories {
 	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
 	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
 	// for more information about repositories.
+	mavenCentral() // Required for MySQL connector
 }
 
 loom {
@@ -47,7 +48,10 @@ dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings(legacy.yarn(project.minecraft_version, project.yarn_build))
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	
+	// MySQL Connector - must be included
 	implementation 'mysql:mysql-connector-java:8.0.33'
+	include 'mysql:mysql-connector-java:8.0.33'
 
 	// Legacy Fabric API provides hooks for events, item registration, and more. As most mods will need this, it's included by default.
 	// If you know for a fact you don't, it's not required and can be safely removed.
