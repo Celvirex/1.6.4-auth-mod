@@ -1,12 +1,12 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "net.legacyfabric.example.mixin",
+  "package": "com.example.authmod.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-  ],
-  "client": [
-    "ExampleMixin"
+    "PlayerEntityMixin",
+    "ServerPlayNetworkHandlerMixin",
+    "ChatMessageMixin"
   ],
   "injectors": {
     "defaultRequire": 1
