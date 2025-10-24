@@ -56,23 +56,8 @@ public class AuthMod implements ModInitializer {
         });
     }
     
-    private void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher) {
-        // Register command
-        dispatcher.register(literal("register")
-            .then(argument("password", StringArgumentType.word())
-                .then(argument("confirmPassword", StringArgumentType.word())
-                    .executes(context -> {
-                        String password = StringArgumentType.getString(context, "password");
-                        String confirmPassword = StringArgumentType.getString(context, "confirmPassword");
-                        ServerCommandSource source = context.getSource();
-                        ServerPlayerEntity player = source.getPlayer();
-                        
-                        if (player == null) {
-                            source.sendError(Text.literal("This command can only be used by players"));
-                            return 0;
-                        }
-                        
-                        return registerPlayer(player, password, confirmPassword);
+    private void registerCommands() {
+                        } 
                     })
                 )
             )
